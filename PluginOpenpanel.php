@@ -1,8 +1,8 @@
 <?php
 
-require_once 'plugins/server/cyberpanel/lib/api.php';
+require_once 'plugins/server/openpanel/lib/api.php';
 
-class PluginCyberpanel extends ServerPlugin
+class PluginOpenpanel extends ServerPlugin
 {
 
     public $features = [
@@ -16,11 +16,11 @@ class PluginCyberpanel extends ServerPlugin
     private $api;
     private function setup($args)
     {
-        $this->api = new CyberAPI(
-            $args['server']['variables']['plugin_cyberpanel_Admin_Username'],
-            $args['server']['variables']['plugin_cyberpanel_Admin_Password'],
+        $this->api = new OpenPanelAPI(
+            $args['server']['variables']['plugin_openpanel_Admin_Username'],
+            $args['server']['variables']['plugin_openpanel_Admin_Password'],
             $args['server']['variables']['ServerHostName'],
-            $args['server']['variables']['plugin_cyberpanel_Port']
+            $args['server']['variables']['plugin_openpanel_Port']
         );
     }
 
@@ -30,28 +30,28 @@ class PluginCyberpanel extends ServerPlugin
             'Name' => [
                 'type' => 'hidden',
                 'description' => 'Used by CE to show plugin',
-                'value' => 'CyberPanel'
+                'value' => 'OpenPanel'
             ],
             'Description' => [
                 'type' => 'hidden',
                 'description' => 'Description viewable by admin in server settings',
-                'value' => 'CyberPanel Server Integration'
+                'value' => 'OpenPanel Server Integration'
             ],
             'Admin Username' => [
                 'type' => 'text',
-                'description' => 'CyberPanel Admin Username',
+                'description' => 'OpenAdmin Username',
                 'value' => '',
             ],
             'Admin Password' => [
                 'type' => 'password',
-                'description' => 'CyberPanel Admin Password',
+                'description' => 'OpenAdmin Password',
                 'value' => '',
                 'encryptable' => true
             ],
             'Port' => [
                 'type' => 'text',
-                'description' => 'CyberPanel Port',
-                'value' => '8090',
+                'description' => 'OpenAdmin Port',
+                'value' => '2087',
             ],
             'Actions' => [
                 'type' => 'hidden',
@@ -76,14 +76,7 @@ class PluginCyberpanel extends ServerPlugin
             'package_vars_values' => [
                 'type'  => 'hidden',
                 'description' => lang('Package Settings'),
-                'value' => [
-                    'ACL' => [
-                        'type' => 'text',
-                        'label' => 'ACL',
-                        'description' => 'ACL for user',
-                        'value' => 'user',
-                    ]
-                ]
+                'value' => []
             ]
         ];
 
@@ -137,18 +130,16 @@ class PluginCyberpanel extends ServerPlugin
     public function unsuspend($args)
     {
         $this->setup($args);
-        $this->api->changeAccountStatus(
-            $args['package']['domain_name'],
-            'Unsuspend'
+        $this->api->unsuspendAccount(
+            $args['package']['username']
         );
     }
 
     public function suspend($args)
     {
         $this->setup($args);
-        $this->api->changeAccountStatus(
-            $args['package']['domain_name'],
-            'Suspend'
+        $this->api->suspendAccount(
+            $args['package']['username']
         );
     }
 
@@ -156,7 +147,7 @@ class PluginCyberpanel extends ServerPlugin
     {
         $this->setup($args);
         $this->api->terminateAccount(
-            $args['package']['domain_name']
+            $args['package']['username']
         );
     }
 
@@ -173,8 +164,8 @@ class PluginCyberpanel extends ServerPlugin
                     break;
                 case 'package':
                     $this->api->changeAccountPackage(
-                        $args['package']['domain_name'],
-                        $values
+                        $args['package']['username'],
+                        $value
                     );
                     break;
             }
@@ -184,22 +175,20 @@ class PluginCyberpanel extends ServerPlugin
     public function create($args)
     {
         $this->setup($args);
-        $userPackage = new UserPackage($args['package']['id']);
 
         $this->api->createAccount(
-            $args['package']['domain_name'],
-            $args['customer']['email'],
-            $args['package']['name_on_server'],
             $args['package']['username'],
             $args['package']['password'],
-            $args['package']['variables']['ACL']
+            $args['customer']['email'],
+            $args['package']['name_on_server'],
+            $args['package']['domain_name']
         );
     }
 
     public function testConnection($args)
     {
         $this->setup($args);
-        CE_Lib::log(4, 'Testing connection to CyberPanel');
+        CE_Lib::log(4, 'Testing connection to OpenPanel');
         $this->api->verifyConnection();
     }
 }
